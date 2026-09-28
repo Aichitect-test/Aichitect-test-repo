@@ -21,7 +21,7 @@ jobs:
       - name: Implement the kickoff with Gemini
         env:
           GEMINI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
-          GOOGLE_GENAI_MODEL: gemini-2.0-flash
+          GOOGLE_GENAI_MODEL: gemini-3.5-flash-lite
         run: |
           set -euo pipefail
           BRIEF="$(cat .aichitect/run)"
