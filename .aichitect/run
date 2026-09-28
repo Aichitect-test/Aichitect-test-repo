@@ -19,3 +19,4 @@ Coder hint:
 Change only README. One sentence that a guest can pay without an account.
 
 Implement that slice. Stay on this branch. Do not merge to the default branch.
+Retry the coder with gemini-3.5-flash-lite.
