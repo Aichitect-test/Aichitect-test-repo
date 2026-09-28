@@ -1,0 +1,51 @@
+# Commit this file to the sandbox default branch through a normal pull request.
+# Promote never writes this file. The kickoff push of `.aichitect/run` starts it.
+name: AiChitect coder
+on:
+  push:
+    paths:
+      - '.aichitect/run'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  code:
+    if: github.ref != format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Implement the kickoff with Gemini
+        env:
+          GEMINI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+          GOOGLE_GENAI_MODEL: gemini-2.0-flash
+        run: |
+          set -euo pipefail
+          BRIEF="$(cat .aichitect/run)"
+          BODY="$(jq -n --arg brief "$BRIEF" --arg model "${GOOGLE_GENAI_MODEL}" \
+            '{contents:[{parts:[{text:("Read this kickoff and implement the smallest change that proves it. Stay on this branch. Do not merge.\n\n"+$brief)}]}],generationConfig:{temperature:0.2}}')"
+          curl -sS -X POST \
+            "https://generativelanguage.googleapis.com/v1beta/models/${GOOGLE_GENAI_MODEL}:generateContent?key=${GEMINI_API_KEY}" \
+            -H 'Content-Type: application/json' \
+            -d "${BODY}" \
+            > /tmp/gemini.json
+          jq -r '.candidates[0].content.parts[0].text // empty' /tmp/gemini.json > /tmp/gemini.md
+          if [ ! -s /tmp/gemini.md ]; then
+            echo "Gemini returned no text" >&2
+            cat /tmp/gemini.json >&2
+            exit 1
+          fi
+          {
+            echo
+            echo
+            echo "## Gemini coder notes"
+            cat /tmp/gemini.md
+          } >> README.md
+          git config user.name "aichitect-coder"
+          git config user.email "aichitect-coder@users.noreply.github.com"
+          git add README.md
+          git diff --cached --quiet || git commit -m "feat: apply Gemini kickoff"
+          git push origin HEAD
