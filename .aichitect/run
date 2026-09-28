@@ -1,0 +1,21 @@
+Story: GUESTPAY-S1
+Title: Guest Shopper Payment Entry Without Account Creation
+
+User story:
+As a guest shopper, I want to enter my payment card details directly within my unauthenticated session so that I can pay for my cart without creating an account or saving payment details. This capability starts when the guest shopper proceeds to checkout without logging in and refuses any user who attempts to register, log in, or save payment cards for future use.
+
+Acceptance criteria:
+- Given an unauthenticated guest shopper with items in the cart, when the shopper navigates to checkout, then the system presents a payment entry form without requiring account creation.
+- Given the guest shopper is entering payment card details, when the transaction is processed, then payment card data is strictly excluded from application logs in accordance with logging policy.
+- Given the payment submission is executed, when the request is sent, then error payloads and logs do not contain payment card data.
+
+Technical notes:
+- Present the unauthenticated checkout payment form on the landing surface `GET /checkout`. Details: runs when the guest shopper navigates to checkout; contract change accepts card details in the payload; storage rule prohibits saving payment cards; failure rule prevents payment card data from appearing in error payloads or logs according to "Application logs must not contain email addresses, phone numbers, government identifiers, or payment card data."; leftover work is zero; do not invent persistent customer profiles or login requirements.
+
+Out of scope:
+Saving payment cards for future use, requiring user login or account registration, persistent customer profiles, and historical order lookup for guests are strictly out of scope.
+
+Coder hint:
+Change only README. One sentence that a guest can pay without an account.
+
+Implement that slice. Stay on this branch. Do not merge to the default branch.
