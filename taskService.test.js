@@ -1,0 +1,1 @@
+const service = require('./taskService');test('rejects unauthenticated', async () => {await expect(service.register({}, false)).rejects.toThrow('401');});test('rejects invalid status', async () => {await expect(service.register({status:'invalid'}, true)).rejects.toThrow('Invalid input');});

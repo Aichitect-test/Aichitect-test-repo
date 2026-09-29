@@ -1,17 +1,13 @@
 # Task Management Service
 
-## Setup
-`npm install`
+- Install: `npm install`
+- Run: `npm start` (URL: http://localhost:3000)
+- Test: `npm test`
 
-## Run
-`npm start`
+Layout:
+- `index.js`: Server entry point
+- `taskService.js`: Business logic and validation
+- `taskRepository.js`: SQLite persistence
+- `public/index.html`: UI
 
-## Test
-`npm test`
-
-## Module Layout
-- `src/task.js`: Interface and implementation for task registration.
-- `src/task.test.js`: Test suite covering authentication, validation, and persistence.
-
-## Extension Point
-To add new task statuses, update the `ALLOWED_STATUSES` constant in `src/task.js`.
+Extension point: `taskService.js` validation rules.
