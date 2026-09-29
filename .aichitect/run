@@ -26,3 +26,4 @@ Implement POST /tasks on the task management web surface to validate and persist
 
 Implement that slice. Stay on this branch. Do not merge to the default branch.
 Coder model: gemini-3.1-flash-lite.
+Deliver the browser page and the sqlite file.
