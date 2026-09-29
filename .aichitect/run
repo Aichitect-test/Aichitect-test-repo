@@ -28,3 +28,4 @@ Implement that slice. Stay on this branch. Do not merge to the default branch.
 Coder model: gemini-3.1-flash-lite.
 Deliver the browser page and the sqlite file.
 Write readable multi-line files. Use sql.js. Listen on port 3010.
+Split every source file across real lines.
