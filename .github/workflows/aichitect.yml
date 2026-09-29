@@ -102,30 +102,29 @@ jobs:
                   return "\n".join(str(line) for line in lines)
               return str(item.get("content") or "")
 
+          def note_for(item):
+              rel = str(item.get("path") or "").replace("\\", "/")
+              content = file_text(item)
+              if len(content) > 280 and content.count("\n") < 8:
+                  return rel, content, rel + " must be many lines, not one line"
+              return rel, content, ""
+
           def quality_notes(files):
               notes = []
               texts = []
               saw_html = False
               for item in files:
-                  rel = str(item.get("path") or "").replace("\\", "/")
-                  content = file_text(item)
+                  rel, content, note = note_for(item)
                   texts.append(content)
-                  if rel.endswith("public/index.html"):
-                      saw_html = True
-                  if len(content) > 280 and content.count("\n") < 8:
-                      notes.append(rel + " must be many lines, not one line")
+                  saw_html = saw_html or rel.endswith("public/index.html")
+                  notes.append(note) if note else None
               blob = "\n".join(texts)
-              if not saw_html:
-                  notes.append("add a multi-line public/index.html form")
-              if "sql.js" not in blob:
-                  notes.append("use the sql.js package and save data/app.sqlite")
-              if "sqlite3" in blob:
-                  notes.append("do not depend on the sqlite3 package")
-              if "3010" not in blob:
-                  notes.append("listen on process.env.PORT or 3010")
-              if "create table" not in blob.lower():
-                  notes.append("create a tasks table in sqlite")
-              return notes
+              notes.append("add a multi-line public/index.html form") if not saw_html else None
+              notes.append("use the sql.js package and save data/app.sqlite") if "sql.js" not in blob else None
+              notes.append("do not depend on the sqlite3 package") if "sqlite3" in blob else None
+              notes.append("listen on process.env.PORT or 3010") if "3010" not in blob else None
+              notes.append("create a tasks table in sqlite") if "create table" not in blob.lower() else None
+              return [note for note in notes if note]
 
           def generate(model_name):
               request = urllib.request.Request(
