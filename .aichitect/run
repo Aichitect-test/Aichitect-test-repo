@@ -1,0 +1,27 @@
+Story: TODOLIST-S1
+Title: Register Task with Deadline and Status
+
+User story:
+As a task owner, I want to capture my daily workload when beginning continuous usage by registering a new task with a deadline and status so that I can capture my daily workload when beginning application usage.
+
+Acceptance criteria:
+- Given the task owner is authenticated, when they submit a task payload containing a title, a valid future deadline date, and an initial status, then the system persists the task record and returns a success confirmation within 200 milliseconds.
+- Given an unauthenticated visitor attempts to submit a task registration, when the request is processed, then the system refuses the request with a 401 Unauthorized status code.
+- Given the task owner submits a task payload with a status outside the allowed set, when validation runs, then the system rejects the entry and displays a validation error message.
+
+Technical notes:
+- Land the task registration change on POST /tasks via the task management web surface. Details: owned by the task management service, this surface processes the owner's request to capture daily workload and is not a new application.
+- Update the contract for task registration. Details: add a task payload containing a title, a future deadline date, and an initial status to POST /tasks.
+- Persist a task record in the database storage layer when a task owner registers a task. Details: customer-originated records are retained per policy, and no multi-user assignments or calendar fields are stored.
+- Run the task payload validation on the POST /tasks request path. Details: the backend validates the submitted status against the allowed set during request processing.
+- Return 401 Unauthorized for unauthenticated visitors and reject validation failures with an error message. Details: the system refuses unauthenticated requests with 401 and returns a validation error message when the status is outside the allowed set, without leaving partial state.
+- Prove this task registration story using both API and UI test suites. Details: the reviewer runs the verification fixtures covering authenticated submission, 401 rejection, and status validation.
+- Exclude automated task scheduling, calendar syncs, external notifications, or multi-user assignment workflows from this draft PR. Details: any advanced scheduling or sync features are out of scope and must not be bundled here.
+
+Out of scope:
+Any automated task scheduling, third-party calendar synchronizations, external notification dispatches, and multi-user assignment workflows are out of scope.
+
+Coder hint:
+Implement POST /tasks on the task management web surface to validate and persist the task record for authenticated owners while strictly enforcing authentication, status validation, and WCAG 2.2 AA accessibility requirements without inventing calendar syncs.
+
+Implement that slice. Stay on this branch. Do not merge to the default branch.
