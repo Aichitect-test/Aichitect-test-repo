@@ -1,0 +1,12 @@
+<h1>Task Registration</h1>
+<label>Title: <input id='title'></label>
+<label>Deadline: <input id='deadline' type='date'></label>
+<label>Status: <select id='status'><option>pending</option><option>in-progress</option><option>completed</option></select></label>
+<button onclick='submit()'>Submit</button>
+<div id='msg'></div>
+<script>
+async function submit() {
+  const res = await fetch('/tasks', { method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': 'local-dev'}, body: JSON.stringify({title: document.getElementById('title').value, deadline: document.getElementById('deadline').value, status: document.getElementById('status').value})});
+  document.getElementById('msg').innerText = await res.text();
+}
+</script>
