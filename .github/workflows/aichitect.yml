@@ -30,7 +30,13 @@ jobs:
           brief = pathlib.Path(".aichitect/run").read_text(encoding="utf-8")
           model = os.environ["GOOGLE_GENAI_MODEL"]
           key = os.environ["GEMINI_API_KEY"]
-          system = """You implement one approved story on this branch. Return source files only. The kickoff is the whole requirement. Implement that slice and nothing beyond it.
+          system = """You implement one approved story on this branch as a program a person can run on localhost. Return source files only. The kickoff is the whole requirement.
+
+          Runnable slice
+          - Include package.json with start and test scripts. npm test must pass with no network. The README must say the URL and port for npm start.
+          - Serve a browser page at public/index.html. The page has a form for the fields in the kickoff and shows success or the validation error. Do not stop at a library class with no page.
+          - Persist records in a SQLite database file at data/app.sqlite using the sql.js package. Load and save that file so a restart keeps the rows. Do not use a mock as the only store. Tests may use a temporary sqlite database.
+          - Expose the HTTP route named in the kickoff and connect the page, the route, and that database. A person can submit the form and see the saved record.
 
           File and code management
           - One responsibility per file, and at most six functions in a file. Split by responsibility when a file would do more.
@@ -65,7 +71,7 @@ jobs:
               "contents": [{"parts": [{"text": prompt}]}],
               "generationConfig": {
                   "temperature": 0.2,
-                  "maxOutputTokens": 16384,
+                  "maxOutputTokens": 32768,
                   "responseMimeType": "application/json",
                   "responseSchema": {
                       "type": "object",
