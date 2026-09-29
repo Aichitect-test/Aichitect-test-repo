@@ -21,7 +21,7 @@ jobs:
       - name: Implement the kickoff with Gemini
         env:
           GEMINI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
-          GOOGLE_GENAI_MODEL: gemini-3.5-flash-lite
+          GOOGLE_GENAI_MODEL: gemini-3.1-flash-lite
         run: |
           set -euo pipefail
           sed 's/^          //' > /tmp/apply_kickoff.py << 'PY'
@@ -87,40 +87,39 @@ jobs:
                   },
               },
           }
-          models = []
-          for name in (model, "gemini-3.8-flash", "gemini-3.5-flash"):
-              if name not in models:
-                  models.append(name)
+          def generate(model_name):
+              request = urllib.request.Request(
+                  "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % model_name,
+                  data=json.dumps(body).encode(),
+                  headers={"Content-Type": "application/json", "x-goog-api-key": key},
+                  method="POST",
+              )
+              try:
+                  response = urllib.request.urlopen(request, timeout=120)
+                  loaded = json.load(response)
+                  response.close()
+                  return loaded, None
+              except urllib.error.HTTPError as error:
+                  return None, error
+
           payload = None
           last_error = "Gemini returned no text"
-          for candidate in models:
-              url = "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % candidate
-              for attempt in range(4):
-                  request = urllib.request.Request(
-                      url,
-                      data=json.dumps(body).encode(),
-                      headers={"Content-Type": "application/json", "x-goog-api-key": key},
-                      method="POST",
-                  )
-                  try:
-                      with urllib.request.urlopen(request, timeout=120) as response:
-                          payload = json.load(response)
-                      print("model " + candidate)
-                      break
-                  except urllib.error.HTTPError as error:
-                      detail = error.read().decode()[:2000]
-                      last_error = detail
-                      if error.code in (429, 503) and attempt < 3:
-                          print("retry %s %s attempt %s" % (candidate, error.code, attempt + 1))
-                          time.sleep(15 * (attempt + 1))
-                          continue
-                      if error.code in (429, 503):
-                          print("model busy " + candidate)
-                          payload = None
-                          break
-                      raise SystemExit(detail)
-              if payload:
+          for candidate in (model, "gemini-3.5-flash-lite"):
+              got, error = generate(candidate)
+              if not got and error is not None and error.code in (429, 503):
+                  print("busy " + candidate)
+                  time.sleep(12)
+                  got, error = generate(candidate)
+              if got:
+                  payload = got
+                  print("model " + candidate)
                   break
+              if error is None:
+                  continue
+              detail = error.read().decode()[:2000]
+              last_error = detail
+              if error.code not in (429, 503):
+                  raise SystemExit(detail)
           if not payload:
               raise SystemExit(last_error)
           parts = payload.get("candidates", [{}])[0].get("content", {}).get("parts", [])
