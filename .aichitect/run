@@ -1,0 +1,23 @@
+Story: TODOLIST-S5
+Title: Register Tasks with Deadline and Status
+
+User story:
+As a named staff role from the todo list application acting as a solo task owner, I want to register a task specifying a deadline and an initial status so that I can be notified of the task creation outcome and trust the task status and deadline record on release day.
+
+Acceptance criteria:
+- Given the named staff role opens the task creation view, when they enter a task description, set a deadline date, and select an initial status, then the system records the task with those exact properties and provides a clear success notification.
+- Given a task is successfully registered, when the solo task owner views their active task list, then the deadline and status are displayed correctly for that task so they can trust the task status and deadline record.
+- Given a task creation attempt fails validation due to a missing deadline, when the record is submitted, then the system refuses the submission and displays an error message without saving incomplete data.
+
+Technical notes:
+- Implement the task creation view landing surface in the frontend application. Details: owned by the named staff role acting as a solo task owner, this surface runs when the user registers a task; do not invent a new app or service for this flow, ensuring compliance with WCAG 2.2 AA as stated in the policy where "New user-facing surfaces must meet WCAG 2.2 AA."
+- Add deadline date and initial status fields on the task record contract. Details: run client-side validation when submitting description, deadline date, and initial status on release day, ensuring the contract includes these exact properties.
+- Store the validated task record directly in the primary database upon successful client-side validation. Details: store the deadline and initial status for active task list viewing, subject to the retention rule where "Customer-originated records are retained for 24 months after the last authenticated activity, then deleted," and do not persist incomplete data when validation fails due to a missing deadline.
+
+Out of scope:
+Multi-user collaboration, external notification services, and automated workflow triggers are out of scope for registering tasks.
+
+Coder hint:
+Build the frontend task creation view for the named staff role, validate the deadline and initial status fields client-side, persist valid records to the primary database while rejecting incomplete submissions, and display a clear success notification.
+
+Implement that slice. Stay on this branch. Do not merge to the default branch.
