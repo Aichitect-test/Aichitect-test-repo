@@ -1,0 +1,22 @@
+Story: TODOLIST-S2
+Title: Add Comments to Open Tasks
+
+User story:
+As a task owner, I want to add comments to an open task so that I can record context and notes while working continuously whenever I interact with my open or past tasks, while closed task owners and non-owners are refused.
+
+Acceptance criteria:
+- Given an open task exists in the system, when the task owner submits a text comment payload, then the system appends the comment to that specific open task with a timestamp.
+- Given a task is marked as closed, when a user attempts to add a comment to it, then the system refuses the addition and returns a 403 Forbidden status code.
+- Given the task owner submits a comment, when it is stored and logged, then application logs omit any restricted data ensuring that application logs must not contain email addresses, phone numbers, government identifiers, or payment card data.
+
+Technical notes:
+- Accept text comment payload on POST /tasks/{id}/comments when the task is open and the actor is the task owner. Details: validate task status is open on the backend service when the endpoint runs; append comment with timestamp to the task storage; return 403 Forbidden when the task is marked as closed or the user is a non-owner; do not invent new notification services.
+- Omit restricted data from application logs during comment submission and processing. Details: verify logger calls exclude email addresses, phone numbers, government identifiers, or payment card data as mandated by the logging policy when error handling or request tracing runs; do not log raw request bodies.
+
+Out of scope:
+Any automated task scheduling, third-party calendar synchronizations, external notification dispatches, and multi-user assignment workflows are out of scope.
+
+Coder hint:
+Validate task status and ownership before appending comments, ensuring closed tasks reject requests with a 403 status and logs remain strictly free of PII.
+
+Implement that slice. Stay on this branch. Do not merge to the default branch.
