@@ -1,0 +1,14 @@
+<h1>Add Comment</h1>
+<label>Task ID: <input id='id'></label>
+<label>Comment: <input id='text'></label>
+<button onclick='submit()'>Submit</button>
+<div id='msg'></div>
+<script>
+async function submit() {
+  const res = await fetch('/tasks/'+document.getElementById('id').value+'/comments', {
+    method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': 'local-dev'},
+    body: JSON.stringify({text: document.getElementById('text').value})
+  });
+  document.getElementById('msg').innerText = res.ok ? 'Success' : 'Error: ' + res.status;
+}
+</script>
