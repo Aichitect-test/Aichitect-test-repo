@@ -1,1 +1,14 @@
-const sqlite3 = require('sqlite3').verbose();const db = new sqlite3.Database('./data/app.sqlite');db.run('CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, title TEXT, deadline TEXT, status TEXT)');module.exports = {save: (task) => new Promise((resolve, reject) => {db.run('INSERT INTO tasks (title, deadline, status) VALUES (?, ?, ?)', [task.title, task.deadline, task.status], function(err) {if (err) reject(err); else resolve(this.lastID);});})};
+const fs = require('fs');
+const initSqlJs = require('sql.js');
+let db;
+async function init() {
+  const SQL = await initSqlJs();
+  const buf = fs.existsSync('data/app.sqlite') ? fs.readFileSync('data/app.sqlite') : null;
+  db = buf ? new SQL.Database(buf) : new SQL.Database();
+  db.run('CREATE TABLE IF NOT EXISTS tasks (title TEXT, deadline TEXT, status TEXT)');
+}
+function save(task) {
+  db.run('INSERT INTO tasks VALUES (?, ?, ?)', [task.title, task.deadline, task.status]);
+  fs.writeFileSync('data/app.sqlite', Buffer.from(db.export()));
+}
+module.exports = { init, save };

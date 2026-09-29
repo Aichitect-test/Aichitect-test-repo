@@ -1,1 +1,10 @@
-const repo = require('./taskRepository');const ALLOWED_STATUSES = ['pending', 'in-progress', 'completed'];module.exports = {register: async (data, isAuthenticated) => {if (!isAuthenticated) throw new Error('401');if (!data.title || !data.deadline || !ALLOWED_STATUSES.includes(data.status)) throw new Error('Invalid input');if (new Date(data.deadline) <= new Date()) throw new Error('Deadline must be future');return await repo.save(data);}};
+const repo = require('./taskRepository');
+function validate(task) {
+  if (!['Pending', 'InProgress'].includes(task.status)) throw new Error('Invalid status');
+  if (new Date(task.deadline) <= new Date()) throw new Error('Deadline must be future');
+}
+async function register(task) {
+  validate(task);
+  repo.save(task);
+}
+module.exports = { register };

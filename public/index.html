@@ -1,1 +1,22 @@
-<form id='taskForm'><input id='title' placeholder='Title'><input id='deadline' type='date'><select id='status'><option>pending</option><option>in-progress</option></select><button type='submit'>Submit</button></form><script>document.getElementById('taskForm').onsubmit = async (e) => {e.preventDefault();const res = await fetch('/tasks', {method:'POST',headers:{'Content-Type':'application/json','Authorization':'secret'},body:JSON.stringify({title:document.getElementById('title').value,deadline:document.getElementById('deadline').value,status:document.getElementById('status').value})});alert(res.ok ? 'Success' : 'Error');}</script>
+<!DOCTYPE html>
+<html>
+<body>
+<h1>Register Task</h1>
+<label>Title: <input id='title'></label><br>
+<label>Deadline: <input type='date' id='deadline'></label><br>
+<label>Status: <select id='status'><option>Pending</option><option>InProgress</option></select></label><br>
+<button onclick='submitTask()'>Submit</button>
+<div id='msg'></div>
+<script>
+async function submitTask() {
+  const res = await fetch('/tasks', {
+    method: 'POST',
+    headers: { 'Authorization': 'local-dev', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: document.getElementById('title').value, deadline: document.getElementById('deadline').value, status: document.getElementById('status').value })
+  });
+  const data = await res.json();
+  document.getElementById('msg').innerText = res.ok ? 'Success' : data.error;
+}
+</script>
+</body>
+</html>
