@@ -24,28 +24,110 @@ jobs:
           GOOGLE_GENAI_MODEL: gemini-3.5-flash-lite
         run: |
           set -euo pipefail
-          BRIEF="$(cat .aichitect/run)"
-          BODY="$(jq -n --arg brief "$BRIEF" --arg model "${GOOGLE_GENAI_MODEL}" \
-            '{contents:[{parts:[{text:("Read this kickoff and implement the smallest change that proves it. Stay on this branch. Do not merge.\n\n"+$brief)}]}],generationConfig:{temperature:0.2}}')"
-          curl -sS -X POST \
-            "https://generativelanguage.googleapis.com/v1beta/models/${GOOGLE_GENAI_MODEL}:generateContent?key=${GEMINI_API_KEY}" \
-            -H 'Content-Type: application/json' \
-            -d "${BODY}" \
-            > /tmp/gemini.json
-          jq -r '.candidates[0].content.parts[0].text // empty' /tmp/gemini.json > /tmp/gemini.md
-          if [ ! -s /tmp/gemini.md ]; then
-            echo "Gemini returned no text" >&2
-            cat /tmp/gemini.json >&2
-            exit 1
-          fi
-          {
-            echo
-            echo
-            echo "## Gemini coder notes"
-            cat /tmp/gemini.md
-          } >> README.md
+          sed 's/^          //' > /tmp/apply_kickoff.py << 'PY'
+          import json, os, pathlib, urllib.error, urllib.request
+
+          brief = pathlib.Path(".aichitect/run").read_text(encoding="utf-8")
+          model = os.environ["GOOGLE_GENAI_MODEL"]
+          key = os.environ["GEMINI_API_KEY"]
+          system = """You implement one approved story on this branch. Return source files only. The kickoff is the whole requirement. Implement that slice and nothing beyond it.
+
+          File and code management
+          - One responsibility per file, and at most six functions in a file. Split by responsibility when a file would do more.
+          - Put the interface that callers and tests use in its own file. Put each implementation in its own file. Do not add a seam unless two implementations actually vary across it.
+          - Name files and functions with the domain words from the kickoff. Do not add generic utils, helpers, or managers.
+          - Prefer composition. Do not build inheritance hierarchies.
+          - Choose a pattern only when the story needs that variation: Factory or Builder to create objects, Strategy to swap an algorithm, Adapter or Facade at a real boundary, State when behaviour changes with status. Skip a pattern that nothing varies across.
+          - Design a deep module: a small interface that hides validation, rules, and storage. Callers learn the interface, not the body.
+          - Pass dependencies in (clock, store, auth). Do not construct them inside the module that owns the rule.
+          - Return a result or raise a typed error. Do not report failure only with a boolean or a log line.
+
+          Tests
+          - Add one test file per module. Test through the interface, the same way a caller uses it. Do not test private helpers.
+          - Cover every acceptance criterion: the success path, the rejected unauthenticated call, and each validation failure named in the kickoff.
+          - Each test name states the situation and the expected outcome.
+          - Tests run with the command in the project manifest, with no network and no real secrets.
+
+          Security
+          - When the story requires an authenticated caller, check that before any write. Fail closed.
+          - Validate type, length, allowed values, and dates at the edge before anything is stored. Reject unexpected fields.
+          - Do not concatenate untrusted input into queries, shell commands, file paths, or HTML. Pass parameters separately, and encode output that is rendered.
+          - Do not put secrets, tokens, or passwords in source. Read configuration from the environment, and do not log credentials or full request bodies.
+
+          Implementor
+          - Write a short README.md: how to install, how to run, how to test, the module layout, and the one place a later story should extend.
+          - Leave that extension point as a small interface so the next change does not rewrite these files.
+          - Do not write .git, .github, or .aichitect paths.
+          """
+          prompt = "Implement this kickoff.\n\n" + brief
+          body = {
+              "systemInstruction": {"parts": [{"text": system}]},
+              "contents": [{"parts": [{"text": prompt}]}],
+              "generationConfig": {
+                  "temperature": 0.2,
+                  "maxOutputTokens": 16384,
+                  "responseMimeType": "application/json",
+                  "responseSchema": {
+                      "type": "object",
+                      "properties": {
+                          "summary": {"type": "string"},
+                          "files": {
+                              "type": "array",
+                              "items": {
+                                  "type": "object",
+                                  "properties": {
+                                      "path": {"type": "string"},
+                                      "content": {"type": "string"},
+                                  },
+                                  "required": ["path", "content"],
+                              },
+                          },
+                      },
+                      "required": ["summary", "files"],
+                  },
+              },
+          }
+          request = urllib.request.Request(
+              "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % model,
+              data=json.dumps(body).encode(),
+              headers={"Content-Type": "application/json", "x-goog-api-key": key},
+              method="POST",
+          )
+          try:
+              with urllib.request.urlopen(request, timeout=120) as response:
+                  payload = json.load(response)
+          except urllib.error.HTTPError as error:
+              raise SystemExit(error.read().decode()[:2000])
+          parts = payload.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+          text = "".join(part.get("text", "") for part in parts)
+          if not text:
+              raise SystemExit("Gemini returned no text\n" + json.dumps(payload)[:2000])
+          data = json.loads(text)
+          files = data.get("files") or []
+          if not files:
+              raise SystemExit("Gemini returned no files")
+          root = pathlib.Path(".").resolve()
+          written = []
+          for item in files:
+              rel = pathlib.PurePosixPath(str(item["path"]).replace("\\", "/").lstrip("/"))
+              if not rel.parts or ".." in rel.parts or rel.parts[0] in {".git", ".github", ".aichitect"}:
+                  raise SystemExit("refusing path %s" % item["path"])
+              dest = (root / pathlib.Path(*rel.parts)).resolve()
+              if root != dest and root not in dest.parents:
+                  raise SystemExit("refusing path %s" % item["path"])
+              content = item.get("content") or ""
+              if not content.strip():
+                  raise SystemExit("empty file %s" % item["path"])
+              dest.parent.mkdir(parents=True, exist_ok=True)
+              dest.write_text(content, encoding="utf-8")
+              written.append(rel.as_posix())
+          print(data.get("summary", ""))
+          print("wrote " + ", ".join(written))
+          PY
+          python3 /tmp/apply_kickoff.py
           git config user.name "aichitect-coder"
           git config user.email "aichitect-coder@users.noreply.github.com"
-          git add README.md
-          git diff --cached --quiet || git commit -m "feat: apply Gemini kickoff"
+          git add -A
+          git diff --cached --quiet && { echo "no file changes"; exit 1; }
+          git commit -m "feat: implement kickoff"
           git push origin HEAD
