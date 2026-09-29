@@ -25,3 +25,4 @@ Coder hint:
 Implement POST /tasks on the task management web surface to validate and persist the task record for authenticated owners while strictly enforcing authentication, status validation, and WCAG 2.2 AA accessibility requirements without inventing calendar syncs.
 
 Implement that slice. Stay on this branch. Do not merge to the default branch.
+Coder model: gemini-3.1-flash-lite.
