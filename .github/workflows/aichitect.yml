@@ -30,13 +30,15 @@ jobs:
           brief = pathlib.Path(".aichitect/run").read_text(encoding="utf-8")
           model = os.environ["GOOGLE_GENAI_MODEL"]
           key = os.environ["GEMINI_API_KEY"]
-          system = """You implement one approved story on this branch as a program a person can run on localhost. Return source files only. The kickoff is the whole requirement.
+          system = """You implement one approved story on this branch as a program a person can run on localhost. Return one JSON object. Each file has path and lines, and each entry in lines is exactly one source line. The kickoff is the whole requirement.
 
           Runnable slice
           - Include package.json with start and test scripts. npm test must pass with no network. The README must say the URL and port for npm start.
-          - Serve a browser page at public/index.html. The page has a form for the fields in the kickoff and shows success or the validation error. Do not stop at a library class with no page.
-          - Persist records in a SQLite database file at data/app.sqlite using the sql.js package. Load and save that file so a restart keeps the rows. Do not use a mock as the only store. Tests may use a temporary sqlite database.
+          - Serve a browser page at public/index.html. It is a full page: a heading, a label for each field in the kickoff, a submit button, and a message area for success or the validation error. Do not stop at a library class with no page.
+          - Persist records in a SQLite database file at data/app.sqlite using only the sql.js package. Load that file on startup and write it after every save so a restart keeps the rows. Do not add the sqlite3 package or any native addon. Do not use a mock as the only store.
           - Expose the HTTP route named in the kickoff and connect the page, the route, and that database. A person can submit the form and see the saved record.
+          - The server listens on process.env.PORT, and the default is 3010. The README URL is http://localhost:3010.
+          - Read the expected bearer token from the TASK_TOKEN environment variable. The README tells the reader to set TASK_TOKEN=local-dev for localhost. Do not hardcode a password in source.
 
           File and code management
           - One responsibility per file, and at most six functions in a file. Split by responsibility when a file would do more.
@@ -45,12 +47,13 @@ jobs:
           - Prefer composition. Do not build inheritance hierarchies.
           - Choose a pattern only when the story needs that variation: Factory or Builder to create objects, Strategy to swap an algorithm, Adapter or Facade at a real boundary, State when behaviour changes with status. Skip a pattern that nothing varies across.
           - Design a deep module: a small interface that hides validation, rules, and storage. Callers learn the interface, not the body.
-          - Pass dependencies in (clock, store, auth). Do not construct them inside the module that owns the rule.
+          - The repository module opens sql.js and the sqlite file. Tests pass a temporary file path into that module.
           - Return a result or raise a typed error. Do not report failure only with a boolean or a log line.
 
           Tests
           - Add one test file per module. Test through the interface, the same way a caller uses it. Do not test private helpers.
           - Cover every acceptance criterion: the success path, the rejected unauthenticated call, and each validation failure named in the kickoff.
+          - The success test saves one valid task into a temporary sqlite database and reads that row back. A test that never touches the database is not enough.
           - Each test name states the situation and the expected outcome.
           - Tests run with the command in the project manifest, with no network and no real secrets.
 
@@ -83,9 +86,9 @@ jobs:
                                   "type": "object",
                                   "properties": {
                                       "path": {"type": "string"},
-                                      "content": {"type": "string"},
+                                      "lines": {"type": "array", "items": {"type": "string"}},
                                   },
-                                  "required": ["path", "content"],
+                                  "required": ["path", "lines"],
                               },
                           },
                       },
@@ -93,6 +96,37 @@ jobs:
                   },
               },
           }
+          def file_text(item):
+              lines = item.get("lines") or []
+              if lines:
+                  return "\n".join(str(line) for line in lines)
+              return str(item.get("content") or "")
+
+          def quality_notes(files):
+              notes = []
+              texts = []
+              saw_html = False
+              for item in files:
+                  rel = str(item.get("path") or "").replace("\\", "/")
+                  content = file_text(item)
+                  texts.append(content)
+                  if rel.endswith("public/index.html"):
+                      saw_html = True
+                  if len(content) > 280 and content.count("\n") < 8:
+                      notes.append(rel + " must be many lines, not one line")
+              blob = "\n".join(texts)
+              if not saw_html:
+                  notes.append("add a multi-line public/index.html form")
+              if "sql.js" not in blob:
+                  notes.append("use the sql.js package and save data/app.sqlite")
+              if "sqlite3" in blob:
+                  notes.append("do not depend on the sqlite3 package")
+              if "3010" not in blob:
+                  notes.append("listen on process.env.PORT or 3010")
+              if "create table" not in blob.lower():
+                  notes.append("create a tasks table in sqlite")
+              return notes
+
           def generate(model_name):
               request = urllib.request.Request(
                   "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent" % model_name,
@@ -136,6 +170,28 @@ jobs:
           files = data.get("files") or []
           if not files:
               raise SystemExit("Gemini returned no files")
+          notes = quality_notes(files)
+          if notes:
+              print("quality " + "; ".join(notes))
+              retry_text = prompt + "\n\nThe last answer failed review:\n- " + "\n- ".join(notes)
+              body["contents"] = [{"parts": [{"text": retry_text}]}]
+              got, error = generate(model)
+              if not got and error is not None and error.code in (429, 503):
+                  print("busy " + model)
+                  time.sleep(12)
+                  got, error = generate(model)
+              if not got:
+                  detail = error.read().decode()[:2000] if error is not None else last_error
+                  raise SystemExit(detail)
+              payload = got
+              parts = payload.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+              text = "".join(part.get("text", "") for part in parts)
+              if not text:
+                  raise SystemExit("Gemini returned no text\n" + json.dumps(payload)[:2000])
+              data = json.loads(text)
+              files = data.get("files") or []
+              if not files:
+                  raise SystemExit("Gemini returned no files")
           root = pathlib.Path(".").resolve()
           written = []
           for item in files:
@@ -145,7 +201,7 @@ jobs:
               dest = (root / pathlib.Path(*rel.parts)).resolve()
               if root != dest and root not in dest.parents:
                   raise SystemExit("refusing path %s" % item["path"])
-              content = item.get("content") or ""
+              content = file_text(item)
               if not content.strip():
                   raise SystemExit("empty file %s" % item["path"])
               dest.parent.mkdir(parents=True, exist_ok=True)
