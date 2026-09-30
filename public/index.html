@@ -1,0 +1,11 @@
+<h1>Calculator</h1>
+<label>Expression: <input id='expr' /></label>
+<button onclick='calc()'>Submit</button>
+<div id='msg'></div>
+<script>
+async function calc() {
+  const res = await fetch('/calculate', { method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': 'local-dev'}, body: JSON.stringify({expression: document.getElementById('expr').value})});
+  const data = await res.json();
+  document.getElementById('msg').innerText = res.ok ? 'Result: ' + data.result : data.error;
+}
+</script>

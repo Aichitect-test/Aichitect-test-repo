@@ -1,0 +1,23 @@
+Story: CALCULATOR-S1
+Title: Create a app having calculator: core use
+
+User story:
+As a person I want create a app having calculator so that I get the result the idea promised.
+
+Acceptance criteria:
+- A person can complete the primary flow of create a app having calculator.
+- Invalid input is rejected with a visible explanation.
+- The happy path does not require a mouse.
+
+Technical notes:
+- Implement Create a app having calculator on the existing surface. Details: reuse the current module; do not add a new app.
+- Persist only what the story needs. Details: keep retention on the existing record; do not log PII.
+- Prove the happy path and the failure leftover. Details: one API or UI test on this story only.
+
+Out of scope:
+Admin tooling and batch imports.
+
+Coder hint:
+Reuse the current path for create a app having calculator; add only the fields the story names.
+
+Implement that slice. Stay on this branch. Do not merge to the default branch.
