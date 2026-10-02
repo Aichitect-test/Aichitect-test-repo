@@ -1,0 +1,21 @@
+Story: TESTPROJEC-S1
+Title: Perform Basic Arithmetic Calculations
+
+User story:
+As a daily personal user, I want to execute addition, subtraction, multiplication, and division operations so that I can compute routine numerical figures when manual calculation is inefficient for daily tasks, starting immediately upon the release of the application, while guests who refuse authentication are refused access, with clear out-of-scope boundaries.
+
+Acceptance criteria:
+- Given the calculator application is open, when the user inputs two numbers and an arithmetic operator, then the correct calculated result is displayed on the screen.
+- Given a calculation is performed, when the result is presented, then the value is rendered accurately without rounding errors for standard decimal values.
+
+Technical notes:
+- Implement the calculator interface on the frontend landing surface. Details: render input controls and operator buttons when the user opens the application in the browser; enforce that every interactive control must also be reachable and operable from the keyboard alone per Accessibility Policy; do not add advanced scientific functions, financial modeling, or third-party integrations.
+- Process arithmetic operations on client-side calculation logic. Details: execute addition, subtraction, multiplication, and division when the user inputs two numbers and an operator; render the result accurately without rounding errors for standard decimal values; do not invent new backend microservices or server-side calculation storage.
+
+Out of scope:
+Advanced scientific functions, financial modeling, and third-party integrations are entirely excluded.
+
+Coder hint:
+Build the basic arithmetic calculator frontend adhering strictly to WCAG 2.2 AA keyboard accessibility without adding out-of-scope scientific or financial features.
+
+Implement that slice. Stay on this branch. Do not merge to the default branch.
