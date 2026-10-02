@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html><body>
+<h1>Calculator</h1>
+<input id='n1' type='number' aria-label='First number'>
+<select id='op' aria-label='Operator'><option>+</option><option>-</option><option>*</option><option>/</option></select>
+<input id='n2' type='number' aria-label='Second number'>
+<button onclick='calc()'>Calculate</button>
+<div id='msg'></div>
+<script>
+async function calc() {
+  const n1 = parseFloat(document.getElementById('n1').value);
+  const n2 = parseFloat(document.getElementById('n2').value);
+  const op = document.getElementById('op').value;
+  let res; if(op==='+') res=n1+n2; else if(op==='-') res=n1-n2; else if(op==='*') res=n1*n2; else res=n1/n2;
+  const response = await fetch('/calculate', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'local-dev' }, body: JSON.stringify({ expression: `${n1}${op}${n2}`, result: res }) });
+  if(response.ok) document.getElementById('msg').innerText = 'Result: ' + res;
+}
+</script>
+</body></html>
