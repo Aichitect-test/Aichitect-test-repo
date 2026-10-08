@@ -1,0 +1,23 @@
+Story: TESTPROJEC-S8
+Title: Integrate Calculator into Billing Configuration Interface
+
+User story:
+As a billing administrator who configures the product billing logic, I want to embed a calculation utility directly within the billing parameter setup screen so that I can compute charge amounts accurately without switching to external tools, starting when billing parameters are being set up or adjusted within the platform, while billing end-users and non-administrative personnel are refused access.
+
+Acceptance criteria:
+- Given a billing administrator is setting up product charges, when the calculator interface is opened within the billing configuration screen, then the calculation workspace renders successfully.
+- Given the administrator inputs numeric values and mathematical operators into the embedded calculator, when the compute action is executed, then the resulting value matches the expected arithmetic output.
+- Given a computed value is finalized, when the administrator applies the result to the billing parameter field, then the field populates with the exact calculated amount.
+
+Technical notes:
+- Embed the calculation utility widget in the billing parameter setup screen. Details: land the workspace on the existing admin configuration UI; run when administrators access billing parameter setup; enforce access control refusing billing end-users and non-administrative personnel; do not store temporary calculator state; do not invent new backend microservices.
+- Implement WCAG 2.2 AA compliant keyboard and screen-reader accessibility controls for the calculator interface. Details: render interactive controls in the billing configuration workspace; run client-side upon rendering; ensure every interactive control is reachable and operable from the keyboard alone as mandated by "New user-facing surfaces must meet WCAG 2.2 AA" and "Every interactive control that is offered to a mouse user must also be reachable and operable from the keyboard alone"; leave out complex third-party math parser libraries; do not modify unrelated product modules.
+- Apply the computed calculation result directly to the active billing parameter input field. Details: handle execution on the client-side configuration view when the compute action is triggered; update the target billing parameter field DOM value upon user confirmation; do not persist raw calculator keystrokes to database storage; do not send payment card data or sensitive PII to external APIs.
+
+Out of scope:
+Customer-facing billing calculation views, external API access to the calculator, modifications to unrelated product modules, and access by billing end-users or non-administrative personnel.
+
+Coder hint:
+Ensure the calculator UI component is strictly restricted to billing administrators, fully keyboard-accessible, and applies outputs directly to the config form without touching backend storage or logging sensitive data.
+
+Implement that slice. Stay on this branch. Do not merge to the default branch.

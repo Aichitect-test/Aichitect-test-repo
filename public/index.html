@@ -1,0 +1,22 @@
+<!DOCTYPE html><html><body>
+<h1>Billing Configuration</h1>
+<label>Parameter: <input id='param' value='rate'></label>
+<label>Value: <input id='val' type='number'></label>
+<div role='region' aria-label='Calculator'>
+  <input id='calc' placeholder='e.g. 10*5' aria-label='Calculation input'>
+  <button onclick='compute()' aria-label='Compute'>=</button>
+  <button onclick='apply()' aria-label='Apply to field'>Apply</button>
+</div>
+<button onclick='save()'>Submit</button>
+<div id='msg'></div>
+<script>
+  function compute() { document.getElementById('calc').value = eval(document.getElementById('calc').value); }
+  function apply() { document.getElementById('val').value = document.getElementById('calc').value; }
+  async function save() {
+    const res = await fetch('/api/billing', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'local-dev' },
+      body: JSON.stringify({ paramName: document.getElementById('param').value, value: parseFloat(document.getElementById('val').value) })
+    });
+    document.getElementById('msg').innerText = res.ok ? 'Saved' : 'Error';
+  }
+</script></body></html>
