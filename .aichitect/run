@@ -1,0 +1,27 @@
+Story: TESTPROJEC-S5
+Title: Project Member TodoItem Comment Storage and Retention Management
+
+User story:
+As a project member submitting a comment, I want to store a comment text, sender identifier, and exact timestamp on every todoitem so that collaboration context is preserved during todoitem reviews.
+
+Acceptance criteria:
+- Given a project member submitting a comment provides valid input, when the comment is processed, then the system successfully stores the comment text, sender identifier, and exact timestamp.
+- Given a project member submitting a comment encounters a processing failure or empty input, when the submission is rejected, then the system displays an error message and allows immediate retry of the comment submission while leaving the todoitem comment state unmodified.
+- Given customer-originated comment records exist, when the 24-month retention window elapses after the last authenticated activity, then the records are deleted in accordance with the data retention policy.
+- Given a customer requests an export of their own data, when the request is processed, then the customer receives the export within 30 days.
+
+Technical notes:
+- Land the todoitem comment feature on the current project database table owned by the existing project backend service. Details: update the todoitem schema in the existing database table, ensuring this is not a new app and serving project member review collaboration.
+- Apply contract updates to include comment fields on the todoitem schema. Details: store comment text, sender identifier, and exact timestamp fields in the request and database contract without adding new external endpoints.
+- Persist comment text, sender identifier, and exact timestamp on the todoitem record. Details: store the required fields directly on the todoitem, while retaining customer-originated records for 24 months after the last authenticated activity as mandated by retention rules, and do not persist product screen comments.
+- Run the comment submission processing on the project member valid input request path. Details: execute validation and storage synchronously when a project member submits a valid input request; do not assume a separate worker for this immediate submission path.
+- Reject empty input or processing failures by failing closed. Details: leave the todoitem comment state unmodified, return a standard error shape, and allow immediate retry without inventing customer data export handling or product screen comments.
+- Avoid inventing unauthorized features or drive-by changes. Details: do not build product screen comments or customer data export handling within this todoitem comment story slice.
+
+Out of scope:
+Adding comments to the product screen, exporting customer data on request within this specific work item slice, and handling any projects beyond the current project are out of scope for this story.
+
+Coder hint:
+Implement todoitem comment storage on the existing project database table along the valid input request path, ensuring empty inputs fail closed with unmodified state, and strictly omit product screen comments and export handling.
+
+Implement that slice. Stay on this branch. Do not merge to the default branch.

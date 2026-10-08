@@ -1,0 +1,14 @@
+<h1>Todo Comment</h1>
+<label>Comment: <input id='c'></label>
+<label>Sender: <input id='s'></label>
+<button onclick='submit()'>Submit</button>
+<div id='msg'></div>
+<script>
+async function submit() {
+  const res = await fetch('/comment', {
+    method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': 'local-dev'},
+    body: JSON.stringify({comment: document.getElementById('c').value, sender: document.getElementById('s').value})
+  });
+  document.getElementById('msg').innerText = res.ok ? 'Saved' : 'Error';
+}
+</script>
