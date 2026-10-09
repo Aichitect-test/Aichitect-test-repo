@@ -1,0 +1,23 @@
+Story: REFUNDS2-S3
+Title: Authenticated Customer Access to Refund Records
+
+User story:
+As an authenticated user, I want secure access to my refund status whenever I require verification, so that I can resolve my inquiry immediately without operational support overhead.
+
+Acceptance criteria:
+- Given an authenticated user, when they require verification of a refund, then they are granted direct self-service access to view their refund status.
+- Given an unauthenticated visitor, when they attempt to view refund statuses, then they are refused access to any customer refund records.
+
+Technical notes:
+- Implement the refund status view on the customer account dashboard landing surface. Details: when an authenticated user navigates to their account, the frontend fetches refund records via a new authenticated API endpoint, satisfying WCAG 2.2 AA per Accessibility Policy section 2.1 ("New user-facing surfaces must meet WCAG 2.2 AA").
+- Validate the user session on the backend when the request runs. Details: if the caller is unauthenticated, reject the request with a 401 status and do not expose any customer refund records, adhering strictly to the acceptance criteria.
+- Retrieve customer refund records from the existing order database storage. Details: query records filtered by the authenticated user's opaque internal identifier, ensuring no PII or email addresses are written to application logs per Logging and Personal Data section 3.1 ("Application logs must not contain email addresses, phone numbers, government identifiers, or payment card data").
+- Handle unauthorized or missing refund queries by returning a safe error payload. Details: ensure error responses sent to diagnostics are stripped of request bodies and do not leak internal database errors.
+
+Out of scope:
+Internal agent dashboards, automated email response systems, and payment gateway integration modifications are out of scope.
+
+Coder hint:
+Verify that authentication middleware guards the new refund endpoint and that all logs reference users by opaque internal identifiers rather than emails.
+
+Implement that slice. Stay on this branch. Do not merge to the default branch.
