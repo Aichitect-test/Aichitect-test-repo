@@ -1,0 +1,15 @@
+{
+  "name": "refunds-app",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "express": "4.18.2",
+    "sql.js": "1.10.3"
+  },
+  "devDependencies": {
+    "jest": "29.7.0",
+    "supertest": "6.3.4"
+  }

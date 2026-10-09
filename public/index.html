@@ -1,0 +1,9 @@
+<!DOCTYPE html><html><body><h1>Refund Status</h1>
+<label>User ID: <input id='uid'></label><button onclick='fetchData()'>Check</button>
+<div id='msg'></div>
+<script>
+async function fetchData() {
+  const res = await fetch('/api/refunds?userId=' + document.getElementById('uid').value, { headers: { 'Authorization': 'local-dev' } });
+  document.getElementById('msg').innerText = JSON.stringify(await res.json());
+}
+</script></body></html>
