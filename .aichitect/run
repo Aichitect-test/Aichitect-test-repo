@@ -1,0 +1,22 @@
+Story: REFUNDS-S3
+Title: Diagnostic Error Payload Sanitization for Refund Inquiries
+
+User story:
+As a security compliance officer, I want third-party diagnostics to strip request bodies from error payloads arising from refund status checks so that sensitive customer data never leaves the system boundary.
+
+Acceptance criteria:
+- Given an error occurring during a customer refund status inquiry starting on sprint day 1, when stack traces and error payloads are transmitted to third-party diagnostics, then the request bodies are completely stripped before leaving the system.
+- Given internal agents or general support staff attempting to trigger or modify refund transactions through this error path, when the action is evaluated, then all non-customer user groups are refused.
+- Given the error handling mechanism, when a failure occurs, then no internal support ticketing modifications or messaging system alterations are performed.
+
+Technical notes:
+- Strip request bodies from error payloads on the third-party diagnostics landing surface. Details: when stack traces and error payloads are transmitted to third-party diagnostics during a customer refund status inquiry starting on sprint day 1, the middleware interceptor must sanitize the payload; do not alter existing telemetry SDK initialization or invent new error reporting services, adhering strictly to the rule that stack traces and error payloads sent to third-party diagnostics are stripped of request bodies before they leave the system.
+- Restrict access exclusively to customer user groups on the refund status error path. Details: when internal agents or general support staff attempt to trigger or modify refund transactions through this error path, the authorization guard must evaluate the user group and refuse all non-customer actors; do not modify support ticketing systems or add internal agent workflows, leaving ticket modifications out of scope.
+
+Out of scope:
+Automated refunds, payment reversals, transaction record modifications, direct support ticketing modifications, messaging systems, and internal agent workflows are completely out of scope.
+
+Coder hint:
+Implement the diagnostic payload sanitizer middleware to drop request bodies during customer refund status inquiry error handling while enforcing customer-only access.
+
+Implement that slice. Stay on this branch. Do not merge to the default branch.
