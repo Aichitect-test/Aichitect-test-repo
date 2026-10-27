@@ -1,0 +1,25 @@
+Story: GUESTORDER-S1
+Title: Guest Order Placement Without Account Creation
+
+User story:
+As a registered shopper who already logged in, I want to place a guest order to save a permanent customer profile for future visits so that I can check out immediately without profile friction.
+
+Acceptance criteria:
+- When a registered shopper who already logged in initiates checkout without authenticating, the checkout system successfully processes the purchase for a non-authenticated visitor using provided guest contact details, adhering to the requirement that "Application logs must not contain email addresses, phone numbers, government identifiers, or payment card data" per Logging and Personal Data clause 3.1.
+- When a guest purchase sequence is executed, the system does not enforce persistent customer profile registration during the guest purchase sequence, ensuring that "Permanent account creation and profile persistence for guest shoppers are excluded" as outlined in the epic.
+
+Technical notes:
+- Land the guest order placement on the checkout API landing surface, ensuring that the checkout execution team already owns that execution surface and that this is not a new app, supporting the user-facing job where a registered shopper can place a guest order to check out immediately without profile friction.
+- Update the contract by adding a guest email field on the checkout contract, modifying the request body payload on the existing checkout endpoint to accept guest contact details.
+- Store the guest email on the order record only, adhering to the retention window requirement that "Customer-originated records are retained for 24 months after the last authenticated activity, then deleted" per Data Retention Policy clause 4.1, and ensuring that permanent customer profiles are not persisted as outlined in the out-of-scope rule.
+- Run the guest order processing on the existing checkout request path synchronously during checkout execution, avoiding any new background worker.
+- Adhere to the failure rule by returning a standard 400 error status with the existing error shape and no leftover profile row when non-authenticated visitors execute an invalid guest purchase sequence.
+- Do not invent any new UI chrome or logging services, and ensure that "Application logs must not contain email addresses, phone numbers, government identifiers, or payment card data" per Logging and Personal Data clause 3.1.
+
+Out of scope:
+Permanent account creation and profile persistence for guest shoppers are excluded.
+
+Coder hint:
+Process guest orders on the existing checkout request path of the checkout API landing surface by adding a guest email field to the contract, storing the email on the order record for 24 months per Data Retention Policy clause 4.1 without creating a customer profile, using the existing error shape on failure, and masking logs per Logging and Personal Data clause 3.1 without inventing new UI chrome or logging services.
+
+Implement that slice. Stay on this branch. Do not merge to the default branch.
