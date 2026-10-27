@@ -1,0 +1,9 @@
+<h1>Checkout</h1>
+<input id='email' placeholder='Email'><input id='pay' placeholder='Payment'>
+<button onclick='submit()'>Submit</button><div id='msg'></div>
+<script>
+async function submit() {
+  const res = await fetch('/checkout', { method: 'POST', headers: {'Authorization': 'local-dev', 'Content-Type': 'application/json'}, body: JSON.stringify({guestEmail: document.getElementById('email').value, paymentDetails: '...' })});
+  document.getElementById('msg').innerText = res.ok ? 'Success' : 'Error';
+}
+</script>
