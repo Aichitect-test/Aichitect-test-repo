@@ -1,0 +1,21 @@
+Story: PROCUREMEN-S5
+Title: Guest Checkout Without Registration
+
+User story:
+As a shopper buying without registering an account, I want to finish checking out without creating an account so that I can purchase items without encountering registration walls.
+
+Acceptance criteria:
+- Given a guest shopper on the checkout flow, when the shopper provides a guest email and payment details, then the system processes the order successfully without requiring an account creation step.
+- The system creates the order for the guest shopper without prompting for a password or registration.
+
+Technical notes:
+- Accept guestEmail on the checkout API landing surface. Details: process the request in the checkout service when the shopper submits order details without an account, enforce that the guestEmail is stored with an opaque identifier in the database rather than logging it as required by the logging policy, apply the 24 month retention window from the data retention policy before deletion, ensure failures do not leak personal data into error payloads, and do not invent new account creation steps.
+- Write an audit event for the order outcome. Details: record the event in the audit subsystem immediately when the checkout workflow completes or fails, name the order subject and the disposition, ensure silence is not treated as approval, and do not write email addresses or payment data into the audit event payload.
+
+Out of scope:
+Any account creation requirement for checkout.
+
+Coder hint:
+Implement guest checkout by accepting email and payment on the order endpoint, mapping the shopper to an opaque identifier, omitting all PII from application logs, and writing an immutable audit event for the order outcome.
+
+Implement that slice. Stay on this branch. Do not merge to the default branch.
