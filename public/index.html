@@ -1,0 +1,10 @@
+<h1>Guest Checkout</h1>
+<label>Email: <input id='email' /></label>
+<button onclick='submit()'>Submit</button>
+<div id='msg'></div>
+<script>
+async function submit() {
+  const res = await fetch('/checkout', { method: 'POST', headers: {'Authorization': 'local-dev', 'Content-Type': 'application/json'}, body: JSON.stringify({email: document.getElementById('email').value})});
+  document.getElementById('msg').innerText = res.ok ? 'Success' : 'Error';
+}
+</script>
